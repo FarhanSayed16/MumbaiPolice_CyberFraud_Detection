@@ -1,0 +1,127 @@
+version: '3.8'
+# LOCAL DEVELOPMENT ONLY — do not use these default credentials or published ports for staging/demo/production (L8).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mumbaicyber-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: mumbaicyber
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mumbaicyber"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  neo4j:
+    image: neo4j:5.20-community
+    container_name: mumbaicyber-neo4j
+    environment:
+      NEO4J_AUTH: neo4j/secretpassword
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_memory_pagecache_size: 512M
+      NEO4J_dbms_memory_heap_initial__size: 512M
+      NEO4J_dbms_memory_heap_max__size: 1G
+    ports:
+      - "7474:7474"  # HTTP Browser
+      - "7687:7687"  # Bolt protocol
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: mumbaicyber-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mumbaicyber-backend
+    env_file:
+      - ./backend/.env
+    environment: &backend_env
+      PROJECT_NAME: "Mumbai Police Cyber Fraud Detection Platform"
+      ENVIRONMENT: "local"
+      DEBUG: "True"
+      SECRET_KEY: "local-dev-secret-key-change-in-production-instantly"
+      POSTGRES_SERVER: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: mumbaicyber
+      DATABASE_URL: "postgresql+asyncpg://postgres:secretpassword@postgres:5432/mumbaicyber"
+      NEO4J_URI: "bolt://neo4j:7687"
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: secretpassword
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_URL: "redis://redis:6379/0"
+      DUPLICATE_COMPLAINANT_WINDOW_DAYS: "30"
+      DUPLICATE_SUSPECT_ACCOUNT_WINDOW_DAYS: "60"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # M6/E9: ARQ worker — processes queued jobs (Phase 7+ imports will use this path)
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mumbaicyber-worker
+    command: ["arq", "app.workers.arq_worker.WorkerSettings"]
+    env_file:
+      - ./backend/.env
+    environment: *backend_env
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mumbaicyber-frontend
+    environment:
+      VITE_API_BASE_URL: "http://localhost:8000/api/v1"
+      VITE_ENVIRONMENT: "LOCAL"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  neo4j_data:
+  neo4j_logs:
+  redis_data:
