@@ -1,0 +1,300 @@
+# Public Complaint Portal & Auto-Triage System
+
+## Problem & Background
+
+Currently, the Maharashtra Cyber Fraud Detection platform is **internal-only** — only authenticated police officers, supervisors, and admins can create cases via the `CaseIntakeModal`. There is no way for a **citizen/victim** to:
+
+1. **Self-register a complaint** via a public web portal (like NCRP 1930).
+2. **Upload evidence** (screenshots of payment apps, bank SMS, WhatsApp chats) at the time of filing.
+3. Have the system **automatically extract key details** (account numbers, UPI IDs, transaction amounts) from that evidence.
+
+Additionally, when a citizen **calls the 1930 helpline**, officers currently have to manually enter everything into the existing intake form, which is slow and error-prone.
+
+---
+
+## What We Will Build
+
+### Two New Intake Channels
+
+```mermaid
+flowchart LR
+    A["👤 Citizen"] -->|"Self-service web"| B["Public Complaint Portal"]
+    A -->|"Calls 1930"| C["🏢 Call Center Quick Intake"]
+    B --> D["📥 Complaint Queue"]
+    C --> D
+    D -->|"Auto-extract"| E["🤖 AI Evidence Parser"]
+    E -->|"Enrich & Score"| F["Auto-Triage Engine"]
+    F -->|"Assign by jurisdiction/workload"| G["👮 Officer Dashboard"]
+    G -->|"Review & Approve"| H["✅ Full Case Created"]
+```
+
+---
+
+## Proposed Changes
+
+### Component 1: Public Complaint Portal (Frontend)
+
+This is a **separate, unauthenticated page** at `/report` that any citizen can access. It is NOT behind the login wall.
+
+#### [NEW] [PublicComplaintPage.tsx](file:///d:/MumbaiPolice_CyberFraud_Detection/frontend/src/pages/PublicComplaintPage.tsx)
+
+A clean, mobile-friendly multi-step form with:
+
+- **Step 1 — What happened?** (Fraud type dropdown, brief description, approximate amount lost)
+- **Step 2 — Your Details** (Name, phone, email — minimal, just enough for contact)
+- **Step 3 — Suspect/Transaction Info** (Account number or UPI ID money was sent to, UTR/transaction reference if known)
+- **Step 4 — Evidence Upload** (Drag & drop screenshots, PDFs, bank statements — up to 5 files)
+- **Step 5 — Review & Submit** (Summary of everything, submit button)
+
+After submission, citizen gets a **complaint tracking number** (e.g., `MH-PUB-2026-00452`) and a message: *"Your complaint has been registered. A cyber police officer will review it within 24 hours."*
+
+> [!IMPORTANT]
+> This page must be **fully bilingual** (English + Marathi toggle at the top), mobile-responsive, and must NOT require login. It needs rate-limiting and CAPTCHA to prevent spam.
+
+#### [MODIFY] [App.tsx](file:///d:/MumbaiPolice_CyberFraud_Detection/frontend/src/App.tsx)
+
+Add the `/report` and `/report/track/:trackingId` routes outside the authenticated layout.
+
+---
+
+### Component 2: Call Center Quick Intake (Frontend)
+
+#### [NEW] [QuickIntakePage.tsx](file:///d:/MumbaiPolice_CyberFraud_Detection/frontend/src/pages/QuickIntakePage.tsx)
+
+A streamlined single-page form for officers taking phone calls, with:
+
+- **Minimal required fields**: Caller name, phone, fraud type, amount, and a free-text narrative
+- **Smart auto-complete**: As the officer types an account number or UPI ID, the system checks the watchlist and prior cases in real-time
+- **Voice-to-text** (optional future): A "Record" button that uses the browser's Web Speech API to transcribe the caller's complaint as the officer listens
+- **One-click submit** that creates the complaint and shows the tracking number immediately
+
+This page IS behind the login wall (officer-only).
+
+---
+
+### Component 3: Backend — Public Complaint API
+
+#### [NEW] [public_complaints.py](file:///d:/MumbaiPolice_CyberFraud_Detection/backend/app/api/v1/public_complaints.py)
+
+New API routes that do NOT require authentication:
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/v1/public/complaints` | `POST` | Submit a new complaint (rate-limited) |
+| `/api/v1/public/complaints/{tracking_id}/status` | `GET` | Check complaint status by tracking number |
+| `/api/v1/public/complaints/{tracking_id}/evidence` | `POST` | Upload evidence files (max 5, max 10MB each) |
+
+#### [NEW] [public_complaint_schemas.py](file:///d:/MumbaiPolice_CyberFraud_Detection/backend/app/schemas/public_complaint.py)
+
+```python
+class PublicComplaintCreate(BaseModel):
+    fraud_type: FraudCategoryEnum
+    description: str  # Free text narrative
+    amount_lost: float
+    complainant_name: str
+    complainant_phone: str
+    complainant_email: Optional[str]
+    suspect_account_number: Optional[str]
+    suspect_upi_id: Optional[str]
+    suspect_phone: Optional[str]
+    transaction_ref: Optional[str]  # UTR/RRN
+    language: str = "en"  # en or mr
+```
+
+#### [NEW] [public_complaint.py](file:///d:/MumbaiPolice_CyberFraud_Detection/backend/app/models/public_complaint.py)
+
+New database model:
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `tracking_number` | String | Public-facing ID (MH-PUB-2026-XXXXX) |
+| `status` | Enum | `submitted` → `under_review` → `approved` → `converted_to_case` / `rejected` |
+| `fraud_type` | Enum | Same FraudCategoryEnum |
+| `description` | Text | Citizen's narrative |
+| `amount_lost` | Float | Reported amount |
+| `complainant_name/phone/email` | String | Contact info |
+| `suspect_*` | String | Account/UPI/phone if provided |
+| `transaction_ref` | String | UTR/RRN |
+| `extracted_data` | JSONB | AI-extracted data from evidence |
+| `assigned_officer_id` | UUID FK | Auto-assigned officer |
+| `case_id` | UUID FK | Linked case once approved |
+| `created_at` | Timestamp | Submission time |
+| `reviewed_at` | Timestamp | When officer reviewed |
+
+---
+
+### Component 4: AI Evidence Parser Service
+
+#### [NEW] [evidence_parser_service.py](file:///d:/MumbaiPolice_CyberFraud_Detection/backend/app/services/evidence_parser_service.py)
+
+When a citizen uploads evidence (screenshots, PDFs, bank statements), this service:
+
+1. **OCR Processing**: Extracts text from images using a lightweight OCR library (e.g., `pytesseract` or the Gemini Vision API if available)
+2. **Pattern Extraction**: Uses regex patterns to identify:
+   - Bank account numbers (10-18 digit patterns)
+   - IFSC codes (`[A-Z]{4}0[A-Z0-9]{6}`)
+   - UPI IDs (`[a-zA-Z0-9._]+@[a-z]+`)
+   - Transaction amounts (`₹X,XX,XXX` patterns)
+   - UTR/RRN references (12-22 digit patterns)
+   - Phone numbers (`+91-XXXXXXXXXX`)
+   - Dates and timestamps
+3. **Enrichment**: Cross-references extracted accounts against the existing watchlist and prior cases
+4. **Confidence scoring**: Returns extracted data with confidence levels
+
+```python
+class ExtractedEvidence(BaseModel):
+    accounts_found: list[ExtractedAccount]
+    upi_ids_found: list[str]
+    amounts_found: list[float]
+    transaction_refs: list[str]
+    phone_numbers: list[str]
+    watchlist_hits: list[WatchlistHit]
+    confidence_score: float  # 0.0 to 1.0
+```
+
+---
+
+### Component 5: Auto-Triage & Assignment Engine
+
+#### [NEW] [auto_triage_service.py](file:///d:/MumbaiPolice_CyberFraud_Detection/backend/app/services/auto_triage_service.py)
+
+After a complaint is submitted and evidence is parsed:
+
+1. **Duplicate Detection**: Check if the suspect account/UPI already appears in existing cases
+2. **Priority Scoring**: Based on amount lost, evidence quality, watchlist hits
+3. **Auto-Assignment**: Assign to the officer with:
+   - Fewest active cases (workload balancing)
+   - Matching jurisdiction (police station/district)
+   - Appropriate role level (high-value cases → supervisor)
+4. **Notification**: Send real-time notification to the assigned officer
+
+#### Assignment Logic
+```
+Priority = HIGH   if amount > ₹5,00,000 OR watchlist_hit = true
+Priority = MEDIUM if amount > ₹50,000
+Priority = LOW    otherwise
+
+Assignment:
+  HIGH   → Supervisor or senior officer with lowest workload
+  MEDIUM → Officer in matching district with lowest workload  
+  LOW    → Any available officer with lowest workload
+```
+
+---
+
+### Component 6: Officer Review Queue (Frontend)
+
+#### [NEW] [ComplaintQueuePage.tsx](file:///d:/MumbaiPolice_CyberFraud_Detection/frontend/src/pages/ComplaintQueuePage.tsx)
+
+A new page at `/complaints` in the officer dashboard showing:
+
+- **Pending complaints** assigned to this officer
+- For each complaint:
+  - Citizen's narrative + contact info
+  - **AI-extracted data** shown as pre-filled fields (editable)
+  - Uploaded evidence as thumbnails (clickable to view)
+  - Watchlist hits highlighted in red
+  - **Approve & Create Case** button → converts to a full case with all data pre-filled
+  - **Request More Info** button → sends SMS/email to citizen asking for clarification
+  - **Reject** button → with reason (spam, insufficient info, etc.)
+
+---
+
+### Component 7: Complaint Status Tracking (Frontend)
+
+#### [NEW] [ComplaintTrackingPage.tsx](file:///d:/MumbaiPolice_CyberFraud_Detection/frontend/src/pages/ComplaintTrackingPage.tsx)
+
+A public page at `/report/track/:trackingId` where citizens can check their complaint status:
+
+- Shows current status with a progress stepper: `Submitted → Under Review → Approved → Investigation Active`
+- Shows assigned officer's name and badge number (for transparency)
+- Shows estimated response time
+
+---
+
+## Data Flow (End-to-End)
+
+```mermaid
+sequenceDiagram
+    participant C as 👤 Citizen
+    participant P as 🌐 Public Portal
+    participant API as ⚙️ Backend API
+    participant OCR as 🤖 Evidence Parser
+    participant TRI as 📊 Auto-Triage
+    participant OFF as 👮 Officer
+    
+    C->>P: Fill complaint form + upload evidence
+    P->>API: POST /public/complaints (with files)
+    API->>API: Generate tracking number (MH-PUB-2026-XXXXX)
+    API-->>C: Return tracking number
+    
+    API->>OCR: Parse uploaded evidence (async worker)
+    OCR->>OCR: OCR → Extract accounts, UPI, amounts
+    OCR->>API: Return extracted_data + confidence
+    
+    API->>TRI: Run auto-triage
+    TRI->>TRI: Check watchlist, score priority
+    TRI->>TRI: Find best officer (workload + jurisdiction)
+    TRI->>API: Assign officer + priority level
+    
+    API->>OFF: Send notification ("New complaint assigned")
+    OFF->>API: GET /complaints (see queue)
+    OFF->>OFF: Review evidence + extracted data
+    OFF->>API: POST /complaints/{id}/approve
+    API->>API: Convert complaint → Full Case
+    API-->>C: Status updates to "Investigation Active"
+```
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> **CAPTCHA / Anti-Spam**: Should we use Google reCAPTCHA, hCaptcha, or a simple math-based CAPTCHA for the public form? reCAPTCHA is easiest but has privacy implications for a government site.
+
+> [!IMPORTANT]
+> **SMS Notifications**: Should the citizen receive SMS updates when their complaint status changes? This requires an SMS gateway (MSG91, Twilio, or the government's NIC SMS service). For now, we can show status on the tracking page only.
+
+> [!IMPORTANT]
+> **Evidence Size Limits**: The current evidence system stores files locally. For a public portal with potentially thousands of uploads, should we keep local storage or switch to cloud (S3/MinIO)?
+
+> [!IMPORTANT]
+> **OCR Engine**: For extracting text from screenshots:
+> - **Option A**: `pytesseract` (free, local, works offline but lower accuracy on Hindi/Marathi text)
+> - **Option B**: Google Cloud Vision API (very accurate, supports Hindi/Marathi, but requires API key + costs)
+> - **Option C**: Simple regex extraction without OCR (only works on PDF text, not screenshots)
+> Which approach do you prefer?
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- Test the full complaint submission flow via API
+- Test evidence upload and size limits
+- Test tracking number generation uniqueness
+- Test auto-assignment algorithm (workload balancing)
+- Test complaint-to-case conversion
+
+### Manual Verification
+1. Submit a complaint through the public portal with test evidence
+2. Verify the complaint appears in the officer's queue with extracted data
+3. Approve the complaint and verify a full case is created
+4. Check the tracking page shows correct status updates
+5. Test on mobile devices for responsive design
+6. Test Marathi language on the public portal
+
+---
+
+## Implementation Phases
+
+| Phase | What | Estimate |
+|---|---|---|
+| **Phase A** | Database model + API endpoints + public complaint form | Core foundation |
+| **Phase B** | Evidence parser + auto-extraction | Intelligence layer |
+| **Phase C** | Auto-triage + officer assignment + notification | Automation layer |
+| **Phase D** | Officer review queue + approve/reject flow | Officer workflow |
+| **Phase E** | Public tracking page + status updates | Citizen transparency |
+| **Phase F** | Quick intake for call center officers | Phone channel |
+| **Phase G** | i18n (Marathi) for all new pages | Localization |

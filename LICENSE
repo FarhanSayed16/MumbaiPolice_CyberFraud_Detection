@@ -1,0 +1,12 @@
+# GOVERNMENT / LAW ENFORCEMENT PROPRIETARY SOFTWARE NOTICE
+
+**Project:** Mumbai Police / Maharashtra Cyber Money-Trail Investigation Platform  
+**Copyright:** (c) 2026 Maharashtra Cyber / Cyber Crime Investigation Cell, Mumbai Police, Maharashtra.  
+**All Rights Reserved.**
+
+### NOTICE OF PROPRIETARY OWNERSHIP & RESTRICTED USE
+This software, source code, data schemas, analytical algorithms, and associated documentation are the exclusive property of **Maharashtra Cyber / Cyber Crime Investigation Cell, Mumbai Police**.
+
+1. **INTERNAL USE ONLY:** This platform is engineered strictly for authorized law enforcement operations, cyber crime investigation, asset tracing, and statutory compliance under the Bharatiya Nagarik Suraksha Sanhita (BNSS), Bharatiya Nyaya Sanhita (BNS), Information Technology Act 2000, and related laws.
+2. **NO DISTRIBUTION OR UNAUTHORIZED COPYING:** No part of this codebase, database schema, or notice generation module may be reproduced, distributed, sublicensed, published, or deployed outside authorized government/law enforcement environments without formal written consent from the Joint Commissioner of Police (Crime / Cyber) or IGP Maharashtra Cyber.
+3. **CLASSIFIED & SENSITIVE DATA HANDLING:** Users and developers must comply with all statutory data protection, evidence handling, and security protocols (`STQC/CERT-In` guidelines, `DPDP Act`). Unauthorized access, extraction, or tampering with audit logs (`audit_log`) and PII is strictly prohibited under applicable criminal and cyber laws.
