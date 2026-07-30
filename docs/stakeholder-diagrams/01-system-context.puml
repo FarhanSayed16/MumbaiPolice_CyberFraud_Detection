@@ -1,0 +1,56 @@
+@startuml diagram-01-system-context
+skinparam backgroundColor #FAFBFC
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam ArrowColor #334155
+skinparam ArrowThickness 1.5
+skinparam roundCorner 12
+
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #CBD5E1
+  FontColor #0F172A
+}
+
+skinparam actor {
+  BackgroundColor #EFF6FF
+  BorderColor #1E3A8A
+  FontColor #1E3A8A
+}
+
+title <b>System Context</b>\nMoney-Trail Investigation Platform
+
+actor "Citizen / Victim" as Citizen #EFF6FF
+actor "1930 Call Desk" as CallDesk #EFF6FF
+actor "Cyber Officer" as Officer #DBEAFE
+actor "Supervisor" as Super #DBEAFE
+
+rectangle "External (already exist)" as EXT #F8FAFC {
+  rectangle "NCRP / CFCFRMS\n(MHA / I4C)" as NCRP #FEF3C7
+  rectangle "Banks / PSPs\n(nodal desks)" as Banks #FEF3C7
+}
+
+rectangle "THIS PLATFORM (built)" as APP #ECFDF5 {
+  rectangle "Case Intake &\nInvestigation Cockpit" as Cockpit #D1FAE5
+  rectangle "Money Trail &\nRisk / Watchlist" as Trail #D1FAE5
+  rectangle "Notices · Evidence\n· SLA Alerts" as Legal #D1FAE5
+}
+
+Citizen --> NCRP : file complaint
+CallDesk --> NCRP : register call
+NCRP -[#94A3B8]-> Cockpit : <color:#64748B>today: officer types NCRP/FIR\nlater: batch import</color>
+Officer --> Cockpit : investigate
+Super --> Cockpit : assign / review
+Cockpit --> Trail
+Trail --> Legal
+Legal -[#94A3B8]-> Banks : <color:#64748B>today: PDF download + email\nlater: structured bank reply</color>
+Banks -[#94A3B8]-> Trail : <color:#64748B>today: Excel/PDF upload\nlater: bank adapter</color>
+
+legend right
+  |= Color |= Meaning |
+  | <#D1FAE5> Green | Ready in prototype |
+  | <#FEF3C7> Amber | External / not fully connected yet |
+endlegend
+
+@enduml

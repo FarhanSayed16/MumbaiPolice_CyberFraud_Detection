@@ -1,0 +1,44 @@
+@startuml diagram-03-ready-vs-needed
+skinparam backgroundColor #FAFBFC
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam packageStyle rectangle
+skinparam ArrowColor #64748B
+
+title <b>Ready vs Needed for Complete Working</b>
+
+package "READY (prototype)" as R #ECFDF5 {
+  card "Case intake &\nRBAC roles" as R1 #D1FAE5
+  card "Money-trail graph\n+ CSV/Excel import" as R2 #D1FAE5
+  card "Risk · Watchlist\n· Related cases" as R3 #D1FAE5
+  card "Evidence locker\n+ audit log" as R4 #D1FAE5
+  card "Notice PDF draft\n+ SLA alerts" as R5 #D1FAE5
+  card "Officer /\nSupervisor dashboards" as R6 #D1FAE5
+}
+
+package "NEEDED FROM POLICE / IT / LEGAL" as N #FFFBEB {
+  card "Real officer\nuser accounts" as N1 #FEF3C7
+  card "5–10 closed cases\n+ hop Excel sheets" as N2 #FEF3C7
+  card "Legal-signed\nBNSS notice text" as N3 #FEF3C7
+  card "CFCFRMS access\nor manual-only decision" as N4 #FEF3C7
+  card "Bank samples +\nnodal pilot (1–3 banks)" as N5 #FEF3C7
+  card "Gov email · hosting\n· secure file storage" as N6 #FEF3C7
+}
+
+R -[hidden]r-> N
+
+R2 ..> N2 : pilot uses real hops
+R5 ..> N3 : makes notices court-ready
+R1 ..> N4 : less re-typing
+R2 ..> N5 : auto bank replies
+R6 ..> N1 : unit can go live
+R4 ..> N6 : production safety
+
+legend right
+  |= | |
+  | <#D1FAE5> | Built & demoable now |
+  | <#FEF3C7> | Required inputs / decisions from stakeholders |
+endlegend
+
+@enduml

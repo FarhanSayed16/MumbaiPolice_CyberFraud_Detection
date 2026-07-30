@@ -1,0 +1,54 @@
+@startuml diagram-04-ask-and-outcomes
+skinparam backgroundColor #FAFBFC
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam actor {
+  BackgroundColor #DBEAFE
+  BorderColor #1E3A8A
+  FontColor #1E3A8A
+}
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #334155
+  FontColor #0F172A
+}
+skinparam package {
+  BackgroundColor #F8FAFC
+  BorderColor #CBD5E1
+  FontColor #0F172A
+}
+skinparam ArrowColor #334155
+
+title <b>What We Ask From You — What You Get Back</b>
+
+actor "Cyber Officers" as Off
+actor "Supervisor /\nSP-DySP Cyber" as Lead
+actor "Legal Cell" as Legal
+actor "Cyber IT" as IT
+
+rectangle "Your inputs" as IN #FFFBEB {
+  usecase "Provide closed\ncases + hop sheets" as UC1
+  usecase "Approve BNSS\nnotice wording" as UC2
+  usecase "Decide CFCFRMS\npath / bank pilot" as UC3
+  usecase "Provide hosting\nemail · storage" as UC4
+}
+
+rectangle "Our delivery" as OUT #ECFDF5 {
+  usecase "Real-data pilot\nreport (trail vs Excel)" as D1
+  usecase "Court-ready\nnotice generation" as D2
+  usecase "Less manual typing\n+ bank reply tracking" as D3
+  usecase "Unit staging system\n(not laptop-only)" as D4
+}
+
+Off --> UC1
+Legal --> UC2
+Lead --> UC3
+IT --> UC4
+
+UC1 --> D1
+UC2 --> D2
+UC3 --> D3
+UC4 --> D4
+
+@enduml

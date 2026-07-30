@@ -1,0 +1,36 @@
+@startuml diagram-02-officer-ready-flow
+skinparam backgroundColor #FAFBFC
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam activity {
+  BackgroundColor #EFF6FF
+  BorderColor #1E40AF
+  FontColor #0F172A
+  DiamondBackgroundColor #FEF3C7
+  DiamondBorderColor #B45309
+}
+skinparam ArrowColor #334155
+skinparam ActivityEndColor #166534
+skinparam ActivityBarColor #1E40AF
+
+title <b>Ready Today — Officer Investigation Flow</b>
+
+|Officer|
+start
+:Login to platform;
+:Create / open case\n(FIR · NCRP · complainant · Layer-1 account);
+:Upload hop sheet\n(CSV / Excel);
+:View multi-hop money trail;
+:Check risk score &\nwatchlist hits;
+:Upload evidence\n(screenshots / PDFs);
+:Generate notice PDF\n(+ pack for annex);
+:Track timeline &\ndeadlines (SLA);
+stop
+
+legend right
+  All steps above are **working in the prototype**.
+  Bank auto-reply and CFCFRMS auto-import are **not** in this flow yet.
+endlegend
+
+@enduml
