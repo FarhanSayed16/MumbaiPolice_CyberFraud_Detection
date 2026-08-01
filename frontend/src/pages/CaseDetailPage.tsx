@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { caseService, accountService, timelineService, userService, type CaseDetail, type TimelineEventItem, type UserProfile } from "@/api/client";
+import { caseService, accountService, timelineService, userService, callDeskService, type CaseDetail, type TimelineEventItem, type UserProfile, type CallOrigin } from "@/api/client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -47,6 +47,7 @@ export const CaseDetailPage: React.FC = () => {
   const [closureReason, setClosureReason] = useState("");
   const [closureRemarks, setClosureRemarks] = useState("");
   const [printTimeline, setPrintTimeline] = useState<TimelineEventItem[]>([]);
+  const [callOrigin, setCallOrigin] = useState<CallOrigin | null>(null);
 
   const loadCaseDetail = async () => {
     if (!caseId) return;
@@ -70,6 +71,7 @@ export const CaseDetailPage: React.FC = () => {
   useEffect(() => {
     if (!caseId) return;
     timelineService.list(caseId, "asc").then(setPrintTimeline).catch(() => setPrintTimeline([]));
+    callDeskService.getCallOrigin(caseId).then(setCallOrigin).catch(() => setCallOrigin(null));
   }, [caseId]);
 
   const formatCurrency = (amount: number) =>
@@ -235,6 +237,28 @@ export const CaseDetailPage: React.FC = () => {
             <span>{error}</span>
           </div>
           <Button variant="outline" size="sm" onClick={loadCaseDetail}>Retry</Button>
+        </div>
+      )}
+
+      {callOrigin && (
+        <div className="p-3 rounded-lg border border-sky-200 bg-sky-50 dark:bg-sky-950/40 text-sky-950 dark:text-sky-100 text-sm flex flex-wrap items-center gap-x-4 gap-y-1 no-print">
+          <span className="font-semibold">Source: 1930 Call Desk</span>
+          <span className="font-mono text-xs">Ticket {callOrigin.ticket_number}</span>
+          {callOrigin.elapsed_to_case_seconds != null && (
+            <span>
+              Time-to-case:{" "}
+              <strong>
+                {Math.floor(callOrigin.elapsed_to_case_seconds / 60)}m {callOrigin.elapsed_to_case_seconds % 60}s
+              </strong>
+            </span>
+          )}
+          <span className="text-xs">{callOrigin.proof_count} proof(s) attached</span>
+          <span className="text-xs text-sky-700 dark:text-sky-300">
+            {callOrigin.source_channel === "demo_sim" ? "Training / simulated line" : callOrigin.source_channel}
+          </span>
+          <Link to="/call-desk" className="text-xs underline ml-auto">
+            Open Helpline Console
+          </Link>
         </div>
       )}
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, FolderGit2, ShieldAlert, FileSpreadsheet, Activity, Users, Lock } from "lucide-react";
+import { LayoutDashboard, FolderGit2, ShieldAlert, FileSpreadsheet, Activity, Users, Lock, PhoneCall } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -11,6 +11,7 @@ export const Sidebar: React.FC = () => {
 
   const navItems = [
     { nameKey: "nav.dashboard", path: "/dashboard", icon: LayoutDashboard, allowed: ["officer", "supervisor", "admin"] },
+    { nameKey: "nav.callDesk", path: "/call-desk", icon: PhoneCall, allowed: ["officer", "supervisor", "admin"] },
     { nameKey: "nav.activeCases", path: "/cases", icon: FolderGit2, allowed: ["officer", "supervisor", "admin"] },
     { nameKey: "nav.watchlistRings", path: "/watchlist", icon: ShieldAlert, disabled: false, allowed: ["officer", "supervisor", "admin"] },
     { nameKey: "nav.bulkImport", path: "/import", icon: FileSpreadsheet, disabled: false, allowed: ["officer", "supervisor", "admin"] },

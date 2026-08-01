@@ -194,6 +194,8 @@ export interface CaseItem {
   sla_due_at?: string;
   suspicion_flags_json?: Record<string, any>;
   duplicate_of_case_id?: string;
+  intake_source?: string;
+  call_ticket_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -719,4 +721,147 @@ export const dashboardService = {
     const res = await api.get('/dashboard');
     return res.data;
   }
+};
+
+/* —— CD-1 Helpline Intake Console —— */
+
+export interface CallTicketProof {
+  id: string;
+  ticket_id: string;
+  file_name: string;
+  file_size_bytes: number;
+  mime_type?: string;
+  sha256_hash: string;
+  description?: string;
+  uploaded_via: string;
+  created_at: string;
+}
+
+export interface CallTicket {
+  id: string;
+  ticket_number: string;
+  status: string;
+  ani_phone?: string;
+  operator_user_id?: string;
+  started_at: string;
+  answered_at?: string;
+  converted_at?: string;
+  elapsed_to_case_seconds?: number;
+  fraud_category?: string;
+  amount_at_risk?: number;
+  complainant_name?: string;
+  complainant_phone?: string;
+  txn_relative_time?: string;
+  layer1_upi?: string;
+  layer1_account?: string;
+  layer1_ifsc?: string;
+  layer1_bank?: string;
+  utr?: string;
+  narrative_short?: string;
+  ncrp_acknowledgement_number?: string;
+  case_id?: string;
+  proof_token?: string;
+  proof_token_expires_at?: string;
+  source_channel: string;
+  created_at: string;
+  updated_at: string;
+  proofs: CallTicketProof[];
+  proof_portal_path?: string;
+  completeness: {
+    checks: Record<string, boolean>;
+    ready_to_convert: boolean;
+    filled: number;
+    total: number;
+  };
+}
+
+export interface CallOrigin {
+  ticket_id: string;
+  ticket_number: string;
+  elapsed_to_case_seconds?: number;
+  answered_at?: string;
+  converted_at?: string;
+  source_channel: string;
+  proof_count: number;
+}
+
+export const callDeskService = {
+  getScriptCard: async () => {
+    const res = await api.get<{ banner: string; note: string; card: Record<string, unknown> }>('/call-desk/script-card');
+    return res.data;
+  },
+  listTickets: async (): Promise<CallTicket[]> => {
+    const res = await api.get<CallTicket[]>('/call-desk/tickets');
+    return res.data;
+  },
+  simulateInbound: async (): Promise<CallTicket> => {
+    const res = await api.post<CallTicket>('/call-desk/tickets/simulate-inbound');
+    return res.data;
+  },
+  answer: async (ticketId: string): Promise<CallTicket> => {
+    const res = await api.post<CallTicket>(`/call-desk/tickets/${ticketId}/answer`);
+    return res.data;
+  },
+  getTicket: async (ticketId: string): Promise<CallTicket> => {
+    const res = await api.get<CallTicket>(`/call-desk/tickets/${ticketId}`);
+    return res.data;
+  },
+  updateTicket: async (ticketId: string, patch: Partial<CallTicket>): Promise<CallTicket> => {
+    const res = await api.patch<CallTicket>(`/call-desk/tickets/${ticketId}`, patch);
+    return res.data;
+  },
+  issueProofLink: async (ticketId: string) => {
+    const res = await api.post<{
+      ticket_id: string;
+      proof_token: string;
+      proof_portal_path: string;
+      expires_at: string;
+      message: string;
+    }>(`/call-desk/tickets/${ticketId}/proof-link`);
+    return res.data;
+  },
+  uploadDeskProof: async (ticketId: string, file: File, description?: string): Promise<CallTicketProof> => {
+    const fd = new FormData();
+    fd.append('file', file);
+    if (description) fd.append('description', description);
+    const res = await api.post<CallTicketProof>(`/call-desk/tickets/${ticketId}/proofs`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
+  convertToCase: async (ticketId: string, acknowledgeDuplicate = false) => {
+    const res = await api.post<{
+      ticket: CallTicket;
+      case_id: string;
+      case_number: string;
+      evidence_ids: string[];
+    }>(`/call-desk/tickets/${ticketId}/convert-to-case?acknowledge_duplicate=${acknowledgeDuplicate}`);
+    return res.data;
+  },
+  getCallOrigin: async (caseId: string): Promise<CallOrigin | null> => {
+    const res = await api.get<CallOrigin | null>(`/cases/${caseId}/call-origin`);
+    return res.data;
+  },
+};
+
+const publicApiBase =
+  import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+
+export const publicCallProofService = {
+  getMeta: async (token: string) => {
+    const res = await axios.get(`${publicApiBase}/public/call-proof/${token}`);
+    return res.data as {
+      ticket_number: string;
+      expires_at?: string;
+      demo_banner: string;
+      already_converted: boolean;
+    };
+  },
+  upload: async (token: string, file: File, description?: string) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    if (description) fd.append('description', description);
+    const res = await axios.post(`${publicApiBase}/public/call-proof/${token}/upload`, fd);
+    return res.data as CallTicketProof;
+  },
 };

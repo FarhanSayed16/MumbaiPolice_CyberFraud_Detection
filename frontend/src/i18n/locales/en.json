@@ -1,6 +1,7 @@
 {
   "nav": {
     "dashboard": "Dashboard",
+    "callDesk": "Helpline Intake",
     "cases": "Cases",
     "activeCases": "Active Cases",
     "watchlistRings": "Watchlist & Rings",
