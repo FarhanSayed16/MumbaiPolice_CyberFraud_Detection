@@ -14,6 +14,8 @@ import { AdminUserPage } from "@/pages/AdminUserPage";
 import { AuditLogPage } from "@/pages/AuditLogPage";
 import { IngestionQueuePage } from "@/pages/IngestionQueuePage";
 import { ProfilePreferencesPage } from "@/pages/ProfilePreferencesPage";
+import { CallDeskPage } from "@/pages/CallDeskPage";
+import { PublicCallProofPage } from "@/pages/PublicCallProofPage";
 import { type RoleType } from "@/api/client";
 
 // Role guard component (`Sub-phase 4.2` & `4.4`)
@@ -39,11 +41,13 @@ export const App: React.FC = () => {
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/public/call-proof/:token" element={<PublicCallProofPage />} />
             
             {/* Main protected layout (`Sub-phase 4.4`) */}
             <Route element={<MainLayout />}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/call-desk" element={<CallDeskPage />} />
               <Route path="/cases" element={<CasesListPage />} />
               <Route path="/cases/:caseId" element={<CaseDetailPage />} />
               <Route path="/watchlist" element={<WatchlistPage />} />

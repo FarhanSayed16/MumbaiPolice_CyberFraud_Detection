@@ -1,0 +1,138 @@
+# Demo / testing stack for remote DSP presentation (same-origin HTTPS via Caddy).
+# Usage:
+#   1. Build frontend/dist with VITE_API_URL=https://$PUBLIC_HOST/api/v1 and VITE_ENVIRONMENT=DEMO
+#   2. cp deploy/env.demo.example deploy/.env.demo  # edit secrets + PUBLIC_HOST
+#   3. docker compose -f deploy/docker-compose.demo.yml --env-file deploy/.env.demo up -d --build
+#   4. docker compose -f deploy/docker-compose.demo.yml exec backend alembic upgrade head
+#   5. docker compose -f deploy/docker-compose.demo.yml exec backend python -m scripts.seed
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secretpassword}
+      POSTGRES_DB: mumbaicyber
+    volumes:
+      - demo_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mumbaicyber"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  neo4j:
+    image: neo4j:5.20-community
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-secretpassword}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_memory_pagecache_size: 512M
+      NEO4J_dbms_memory_heap_initial__size: 512M
+      NEO4J_dbms_memory_heap_max__size: 1G
+    volumes:
+      - demo_neo4j:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - demo_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    environment:
+      PROJECT_NAME: "Mumbai Police Cyber Fraud Detection Platform"
+      ENVIRONMENT: demo
+      DEBUG: "False"
+      SECRET_KEY: ${SECRET_KEY}
+      CORS_ORIGINS: '["https://${PUBLIC_HOST}","http://${PUBLIC_HOST}"]'
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-secretpassword}@postgres:5432/mumbaicyber
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-secretpassword}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_URL: redis://redis:6379/0
+      EMAIL_DELIVERY_MODE: mock
+      CSRF_ENABLED: "True"
+      INGESTION_INLINE_FALLBACK: "True"
+      UPLOAD_DIR: /workspace/uploads
+    volumes:
+      - demo_uploads:/workspace/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    command: ["arq", "app.workers.arq_worker.WorkerSettings"]
+    environment:
+      PROJECT_NAME: "Mumbai Police Cyber Fraud Detection Platform"
+      ENVIRONMENT: demo
+      DEBUG: "False"
+      SECRET_KEY: ${SECRET_KEY}
+      CORS_ORIGINS: '["https://${PUBLIC_HOST}"]'
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-secretpassword}@postgres:5432/mumbaicyber
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-secretpassword}
+      REDIS_URL: redis://redis:6379/0
+      EMAIL_DELIVERY_MODE: mock
+      INGESTION_INLINE_FALLBACK: "True"
+      UPLOAD_DIR: /workspace/uploads
+    volumes:
+      - demo_uploads:/workspace/uploads
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../frontend/dist:/srv:ro
+      - demo_caddy_data:/data
+      - demo_caddy_config:/config
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  demo_pg:
+  demo_neo4j:
+  demo_redis:
+  demo_uploads:
+  demo_caddy_data:
+  demo_caddy_config:

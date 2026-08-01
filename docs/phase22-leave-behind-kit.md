@@ -20,11 +20,13 @@ An **internal investigation cockpit** that helps officers after a complaint is k
 | **Draft** BNSS-style notice PDF + pack | Ready (legal text pending sign-off) |
 | SLA alerts + email (when SMTP configured) | Ready |
 | Honest labels: Bank Pilot **Not connected** · CFCFRMS **Simulated** | Ready |
+| **Helpline Intake Console** (simulated 1930 call → proofs → case) | Ready (CD-1) |
 
 ## 2. What is NOT claimed
 
 - Live bank freeze / bank API  
 - Automatic CFCFRMS / NCRP sync  
+- Live national **1930** trunk / telephony (Call Desk is **simulated line** for training)  
 - Court-ready / legally certified notices (templates still draft / placeholder signer)  
 - Production hosting / CERT-In certification  
 - “Band B complete” or measured 10× efficacy  

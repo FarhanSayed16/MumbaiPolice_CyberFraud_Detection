@@ -144,7 +144,7 @@ DATABASE_URL=postgresql+asyncpg://...@neon.../mumbaicyber
 NEO4J_URI=neo4j+s://xxxx.databases.neo4j.io
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=<aura-password>
-REDIS_URL=rediss://default:...@upstash...   # or omit and rely on inline
+REDIS_URL=rediss://default:YOUR_PASSWORD_HERE@YOUR_UPSTASH_ENDPOINT   # or omit and rely on inline
 EMAIL_DELIVERY_MODE=mock
 ```
 

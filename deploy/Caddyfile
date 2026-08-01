@@ -1,0 +1,19 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$PUBLIC_HOST} {
+	encode gzip
+
+	# API + public proof portal
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+
+	# SPA assets
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

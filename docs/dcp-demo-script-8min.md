@@ -7,6 +7,20 @@
 
 **Never open:** System Health · Admin Users · Advanced tools / EXPLAIN · Seed Roles · raw JSON  
 
+**Optional +4–5 min module:** Helpline Intake Console (`/call-desk`) — see section “Call Desk beat” below.
+
+---
+
+## Call Desk beat (optional, after trail or instead of Watchlist)
+
+| Clock | Action | Say |
+|---|---|---|
+| +0:00 | Open **Helpline Intake** | “Before the IO gets a case, the golden window is the helpline call. This is a **training simulated line** — not live 1930.” |
+| +0:30 | **Simulate inbound call** → timer runs | “Timer starts. Freeze-critical fields first — amount, UPI, when paid.” |
+| +1:30 | **Fill demo script card** → **Send upload link** → open portal / desk upload | “While still on the call, proofs land without waiting for email.” |
+| +3:00 | **Create case** → Case Detail banner | “Ticket becomes a case in the same cockpit — time-to-case shown on the banner.” |
+| +4:00 | Stop | “Live trunk needs Cyber IT. Today the **process** is proven end-to-end.” |
+
 ---
 
 ## Pre-flight (T−5 min, tech runner only)
