@@ -27,6 +27,7 @@ from app.api.v1.network import router as network_router
 from app.api.v1.analytics import router as analytics_router
 from app.api.v1.notices import router as notices_router
 from app.api.v1.risk import router as risk_router
+from app.api.v1.call_desk import router as call_desk_router, public_router as call_proof_public_router
 
 logger = logging.getLogger(__name__)
 api_router = APIRouter()
@@ -37,6 +38,8 @@ api_router.include_router(users_router, prefix="/users", tags=["users-admin"])
 api_router.include_router(audit_router, prefix="/audit", tags=["audit-logs"])
 api_router.include_router(accounts_router, prefix="/accounts", tags=["accounts"])
 api_router.include_router(cases_router, prefix="/cases", tags=["cases"])
+api_router.include_router(call_desk_router, prefix="/call-desk", tags=["call-desk"])
+api_router.include_router(call_proof_public_router, prefix="/public", tags=["public-call-proof"])
 api_router.include_router(ingestion_router, prefix="/ingestion", tags=["ingestion"])
 api_router.include_router(trail_router, prefix="/trail", tags=["money-trail"])
 api_router.include_router(evidence_router, prefix="", tags=["evidence"])

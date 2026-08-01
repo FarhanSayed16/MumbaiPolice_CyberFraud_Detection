@@ -145,6 +145,8 @@ class CaseResponse(BaseModel):
     duplicate_of_case_id: Optional[str] = None
     closure_reason: Optional[str] = None
     closure_remarks: Optional[str] = None
+    intake_source: Optional[str] = None
+    call_ticket_id: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

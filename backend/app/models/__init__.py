@@ -20,6 +20,7 @@ from app.models.network_cluster import NetworkCluster
 from app.models.template import Template
 from app.models.timeline_event import TimelineEvent
 from app.models.notice_template import NoticeTemplate
+from app.models.call_ticket import CallTicket, CallTicketProof
 
 __all__ = [
     "RoleEnum",
@@ -42,4 +43,6 @@ __all__ = [
     "Template",
     "TimelineEvent",
     "NoticeTemplate",
+    "CallTicket",
+    "CallTicketProof",
 ]

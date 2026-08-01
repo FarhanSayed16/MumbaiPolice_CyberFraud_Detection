@@ -48,6 +48,10 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         if any(path.endswith(suf) or path == suf for suf in EXEMPT_SUFFIXES):
             return await call_next(request)
 
+        # Public victim proof portal (token auth; no session cookie expected)
+        if "/public/call-proof/" in path:
+            return await call_next(request)
+
         # Only enforce when an access_token cookie is present (cookie session mode)
         if not request.cookies.get("access_token"):
             return await call_next(request)

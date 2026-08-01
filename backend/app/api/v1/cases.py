@@ -95,14 +95,16 @@ async def check_duplicate_preview(
     return warnings
 
 
-@router.post("", response_model=CaseResponse, status_code=status.HTTP_201_CREATED, tags=["cases"])
-async def create_case(
+async def create_case_record(
+    db: AsyncSession,
+    *,
     intake: CaseCreate,
-    request: Request,
-    current_user: User = Depends(get_current_active_officer),
-    db: AsyncSession = Depends(get_db),
-):
-    ip_addr = request.client.host if request.client else "unknown"
+    current_user: User,
+    ip_addr: str,
+    intake_source: Optional[str] = "manual",
+    call_ticket_id: Optional[str] = None,
+) -> Case:
+    """Shared intake used by POST /cases and call-desk convert (CD-1)."""
     now = datetime.now(timezone.utc)
 
     warnings = await detect_case_duplicates(db, intake)
@@ -179,11 +181,14 @@ async def create_case(
         sla_due_at=sla_due,
         suspicion_flags_json=flags_dict,
         duplicate_of_case_id=duplicate_link_id,
+        intake_source=intake_source,
+        call_ticket_id=call_ticket_id,
         created_at=now,
         updated_at=now,
     )
     db.add(case_obj)
 
+    account_obj = None
     if intake.suspect_account:
         s_acc = intake.suspect_account
         stable_id = generate_stable_account_id(
@@ -261,6 +266,7 @@ async def create_case(
             "warnings_count": len(warnings),
             "duplicate_acknowledged": intake.acknowledge_duplicate,
             "watchlist_hits_count": len(watchlist_hits),
+            "intake_source": intake_source,
         },
         commit=False,
     )
@@ -282,6 +288,23 @@ async def create_case(
         await sync_account_node(account_obj)
         await sync_case_layer1_edge(case_obj, account_obj, intake.amount_at_risk, False)
     return case_obj
+
+
+@router.post("", response_model=CaseResponse, status_code=status.HTTP_201_CREATED, tags=["cases"])
+async def create_case(
+    intake: CaseCreate,
+    request: Request,
+    current_user: User = Depends(get_current_active_officer),
+    db: AsyncSession = Depends(get_db),
+):
+    ip_addr = request.client.host if request.client else "unknown"
+    return await create_case_record(
+        db,
+        intake=intake,
+        current_user=current_user,
+        ip_addr=ip_addr,
+        intake_source="manual",
+    )
 
 
 @router.get("/search", response_model=CaseListResponse, tags=["cases"])
@@ -457,6 +480,22 @@ async def get_case(
     detail_data.duplicate_warnings = dup_warnings
     detail_data.assigned_officer_name = assignee_name
     return detail_data
+
+
+@router.get("/{case_id}/call-origin", response_model=Optional[dict], tags=["cases"])
+async def get_case_call_origin(
+    case_id: str,
+    current_user: User = Depends(get_current_active_officer),
+    db: AsyncSession = Depends(get_db),
+):
+    """CD-1: banner data when case was created from Helpline Intake Console."""
+    from app.services.call_desk_service import get_call_origin_for_case
+
+    await _get_scoped_case_or_404(db, case_id, current_user)
+    origin = await get_call_origin_for_case(db, case_id)
+    if not origin:
+        return None
+    return origin
 
 
 @router.patch("/{case_id}", response_model=CaseResponse, tags=["cases"])

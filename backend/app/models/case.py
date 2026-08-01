@@ -49,6 +49,12 @@ class Case(Base):
     victim_upi_id: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
     created_by_user_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
 
+    # CD-1: helpline intake origin
+    intake_source: Mapped[Optional[str]] = mapped_column(String(40), index=True, nullable=True)  # manual | call_ticket
+    call_ticket_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("call_tickets.id", ondelete="SET NULL"), index=True, nullable=True
+    )
+
     assigned_to_user_id: Mapped[Optional[str]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
     reported_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), nullable=False)
     sla_due_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True, nullable=True)
