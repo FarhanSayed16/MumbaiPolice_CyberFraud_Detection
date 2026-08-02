@@ -61,13 +61,21 @@ Once containers are running, access the services:
 
 If running outside Docker for faster hot-reloading:
 
-### Backend (Python 3.11+)
+### Backend API (Python 3.11+)
 ```powershell
 cd backend
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Background Worker (ARQ)
+The system uses an asynchronous queue for graph syncing and notifications. Run this in a separate terminal:
+```powershell
+cd backend
+.\venv\Scripts\activate
+arq app.workers.arq_worker.WorkerSettings
 ```
 
 ### Frontend (Node.js 20+)
