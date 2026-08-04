@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "services": {
+    "dbs": {
+      "type": "docker",
+      "path": ".",
+      "cmd": "docker compose -f docker-compose.yml up -d postgres neo4j redis",
+      "restart": false,
+      "autoLaunch": true
+    },
+    "backend": {
+      "type": "python",
+      "path": "backend",
+      "cmd": "D:\\MumbaiPolice_CyberFraud_Detection\\backend\\.venv\\Scripts\\uvicorn.exe app.main:app --reload --host 0.0.0.0",
+      "module": "app.main:app",
+      "restart": false,
+      "autoLaunch": true
+    },
+    "worker": {
+      "type": "python",
+      "path": "backend",
+      "cmd": "D:\\MumbaiPolice_CyberFraud_Detection\\backend\\.venv\\Scripts\\arq.exe app.workers.arq_worker.WorkerSettings",
+      "restart": false,
+      "autoLaunch": true
+    },
+    "mumbaicyber-frontend": {
+      "type": "node",
+      "path": "frontend",
+      "cmd": "npm run dev",
+      "restart": false,
+      "autoLaunch": true,
+      "packageManager": "npm"
+    }
+  }
+}

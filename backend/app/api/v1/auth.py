@@ -23,10 +23,10 @@ router = APIRouter()
 
 
 def _set_auth_cookies(response: Response, request: Request, user_id: str) -> None:
-    is_secure = request.url.scheme == "https" or (
-        "localhost" not in (request.url.hostname or "")
-        and "127.0.0.1" not in (request.url.hostname or "")
-    )
+    # Prefer real client scheme (Caddy/nginx set X-Forwarded-Proto). Do NOT treat
+    # every non-localhost host as HTTPS — that breaks cookie login on plain HTTP IPs.
+    forwarded = (request.headers.get("x-forwarded-proto") or "").split(",")[0].strip().lower()
+    is_secure = forwarded == "https" or request.url.scheme == "https"
     access = create_access_token(subject=user_id)
     refresh = create_refresh_token(subject=user_id)
     csrf = generate_csrf_token()

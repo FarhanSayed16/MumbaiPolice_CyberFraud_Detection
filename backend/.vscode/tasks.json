@@ -1,0 +1,54 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "devcli:backend",
+      "type": "shell",
+      "command": "D:\\MumbaiPolice_CyberFraud_Detection\\backend\\.venv\\Scripts\\uvicorn.exe app.main:app --reload --host 0.0.0.0",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+    {
+      "label": "devcli:worker",
+      "type": "shell",
+      "command": "D:\\MumbaiPolice_CyberFraud_Detection\\backend\\.venv\\Scripts\\arq.exe app.workers.arq_worker.WorkerSettings",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+    {
+      "label": "devcli: all",
+      "dependsOn": [
+        "devcli:backend",
+        "devcli:worker"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

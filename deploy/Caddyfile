@@ -5,9 +5,13 @@
 {$PUBLIC_HOST} {
 	encode gzip
 
-	# API + public proof portal
+	# API + public proof portal (preserve client host/proto for cookies)
 	handle /api/* {
-		reverse_proxy backend:8000
+		reverse_proxy backend:8000 {
+			header_up Host {host}
+			header_up X-Forwarded-Proto {scheme}
+			header_up X-Real-IP {remote_host}
+		}
 	}
 
 	# SPA assets

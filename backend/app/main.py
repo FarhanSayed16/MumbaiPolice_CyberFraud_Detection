@@ -77,6 +77,10 @@ async def rate_limit_login_middleware(request: Request, call_next):
 
 
 # Mount baseline security middlewares (`Sub-phase 5.1` & `5.4` + audit H2 CSRF)
+# Trust X-Forwarded-* from reverse proxy (Caddy / nginx) so cookies & scheme are correct
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 app.add_middleware(CSRFMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(CorrelationIdMiddleware)

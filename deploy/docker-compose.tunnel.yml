@@ -1,0 +1,14 @@
+# Caddy only — use with stack already running on your Windows/Mac laptop.
+# cloudflared tunnel --url http://127.0.0.1:8080
+
+services:
+  caddy_tunnel:
+    image: caddy:2-alpine
+    ports:
+      - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./Caddyfile.tunnel:/etc/caddy/Caddyfile:ro
+      - ../frontend/dist:/srv:ro
+    restart: unless-stopped

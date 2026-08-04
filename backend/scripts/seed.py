@@ -90,8 +90,13 @@ SCENARIO_3_CSV = b"""source_account_number,target_account_number,amount,timestam
 
 
 async def main() -> None:
-    if settings.ENVIRONMENT.lower() not in ("local", "development", "dev", "test"):
-        logger.error("Refusing to seed: ENVIRONMENT=%s (local only)", settings.ENVIRONMENT)
+    env = settings.ENVIRONMENT.lower()
+    # local/* + demo training deploys (Cloudflare tunnel / DCP). production/staging still blocked.
+    if env not in ("local", "development", "dev", "test", "ci", "demo"):
+        logger.error(
+            "Refusing to seed: ENVIRONMENT=%s (allowed: local/dev/test/ci/demo)",
+            settings.ENVIRONMENT,
+        )
         sys.exit(1)
 
     try:

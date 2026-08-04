@@ -1,0 +1,25 @@
+# Local reverse proxy for Cloudflare Tunnel (TLS ends at Cloudflare).
+# Listens on :8080 — cloudflared points at http://127.0.0.1:8080
+#
+# Serves:
+#   /api/* → FastAPI (backend:8000 or host.docker.internal:8000)
+#   /*     → frontend/dist
+
+:8080 {
+	encode gzip
+
+	handle /api/* {
+		reverse_proxy host.docker.internal:8000 {
+			header_up Host {host}
+			header_up X-Forwarded-Proto https
+			header_up X-Forwarded-Host {host}
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}
