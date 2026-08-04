@@ -259,9 +259,6 @@ Sir,
 Demo link (open in Chrome):
 https://YOUR-URL.trycloudflare.com
 
-Login (Supervisor):
-Email: supervisor.mumbai@maharashtracyber.gov.in
-Password: SecurePolice@2026
 
 Clicks:
 1) Helpline Intake → Simulate inbound → Fill demo script → Create case
