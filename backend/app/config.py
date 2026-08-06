@@ -66,6 +66,8 @@ class Settings(BaseSettings):
     # Phase 17 SLA / notifications (audit H17-H19, M17)
     NOTICE_SLA_DAYS: int = 7
     CASE_INACTIVITY_DAYS: int = 14
+    # Master switch to pause all outgoing emails (defaults to False to prevent spam)
+    ENABLE_EMAILS: bool = False
     # ARQ cron for scan_overdue_slas — default hourly; set SLA_SCAN_CRON_MINUTE for dev (e.g. "*")
     SLA_SCAN_CRON_MINUTE: Optional[int] = None  # None = hourly on the hour
 

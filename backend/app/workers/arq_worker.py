@@ -117,14 +117,15 @@ async def scan_overdue_slas(ctx: dict[str, Any]) -> None:
             db.add(new_notif)
             
             # Send Email
-            user_res = await db.execute(select(User).where(User.id == case.assigned_to_user_id))
-            assigned_user = user_res.scalars().first()
-            if assigned_user and assigned_user.email_notifications_enabled:
-                await send_email_async(
-                    to_email=assigned_user.email,
-                    subject=f"SLA Breach: Case {case.case_number}",
-                    body=f"Hello {assigned_user.name},\n\nCase {case.case_number} is overdue.\n\nPlease log in and update the case."
-                )
+            if settings.ENABLE_EMAILS:
+                user_res = await db.execute(select(User).where(User.id == case.assigned_to_user_id))
+                assigned_user = user_res.scalars().first()
+                if assigned_user and assigned_user.email_notifications_enabled:
+                    await send_email_async(
+                        to_email=assigned_user.email,
+                        subject=f"SLA Breach: Case {case.case_number}",
+                        body=f"Hello {assigned_user.name},\n\nCase {case.case_number} is overdue.\n\nPlease log in and update the case."
+                    )
 
         # Scan Notices
         stmt_notices = (
@@ -167,14 +168,15 @@ async def scan_overdue_slas(ctx: dict[str, Any]) -> None:
                 db.add(new_notif)
                 
                 # Send Email
-                user_res = await db.execute(select(User).where(User.id == notify_user_id))
-                assigned_user = user_res.scalars().first()
-                if assigned_user and assigned_user.email_notifications_enabled:
-                    await send_email_async(
-                        to_email=assigned_user.email,
-                        subject=f"SLA Breach: Notice {notice.notice_number}",
-                        body=f"Hello {assigned_user.name},\n\nNotice {notice.notice_number} is overdue.\n\nPlease follow up."
-                    )
+                if settings.ENABLE_EMAILS:
+                    user_res = await db.execute(select(User).where(User.id == notify_user_id))
+                    assigned_user = user_res.scalars().first()
+                    if assigned_user and assigned_user.email_notifications_enabled:
+                        await send_email_async(
+                            to_email=assigned_user.email,
+                            subject=f"SLA Breach: Notice {notice.notice_number}",
+                            body=f"Hello {assigned_user.name},\n\nNotice {notice.notice_number} is overdue.\n\nPlease follow up."
+                        )
 
         await db.commit()
         logger.info("[ARQ] scan_overdue_slas completed.")

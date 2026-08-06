@@ -24,6 +24,10 @@ async def send_email_async(
     Send email via SMTP when configured, otherwise log mock dispatch.
     Never claims live delivery without SMTP credentials.
     """
+    if not getattr(settings, "ENABLE_EMAILS", False):
+        logger.info("Email paused by ENABLE_EMAILS=False. Skipping: %s", subject)
+        return {"success": True, "mode": "mock", "detail": "emails paused"}
+
     mode = (settings.EMAIL_DELIVERY_MODE or "mock").lower()
 
     if mode == "smtp" and settings.SMTP_HOST and settings.SMTP_FROM:
