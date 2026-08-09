@@ -35,7 +35,7 @@ async def emit_notification(
     )
     db.add(notif)
 
-    if send_email:
+    if send_email and settings.ENABLE_EMAILS:
         user_res = await db.execute(select(User).where(User.id == user_id))
         user = user_res.scalar_one_or_none()
         if user and user.email_notifications_enabled:

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -66,10 +66,15 @@ class Settings(BaseSettings):
     # Phase 17 SLA / notifications (audit H17-H19, M17)
     NOTICE_SLA_DAYS: int = 7
     CASE_INACTIVITY_DAYS: int = 14
-    # Master switch to pause all outgoing emails (defaults to False to prevent spam)
+    # Master switch — MUST be true to send any live SMTP (default OFF to stop spam)
     ENABLE_EMAILS: bool = False
-    # ARQ cron for scan_overdue_slas — default hourly; set SLA_SCAN_CRON_MINUTE for dev (e.g. "*")
-    SLA_SCAN_CRON_MINUTE: Optional[int] = None  # None = hourly on the hour
+    # When False, scan_overdue_slas never calls SMTP (in-app notifications only)
+    ENABLE_SLA_EMAILS: bool = False
+    # ARQ cron: use hour=every, minute=0 for real hourly. Do NOT pass minute=None (ARQ expands to all minutes).
+    # Off by default after mail storm; set true only if you want in-app SLA alerts again
+    SLA_SCAN_ENABLED: bool = False
+    SLA_SCAN_CRON_MINUTE: int = 0  # minute of each hour (0–59); not None
+    SLA_SCAN_RUN_AT_STARTUP: bool = False  # avoid mail storm when worker restarts
 
     # Phase 17 email (audit H17) — mock unless SMTP configured
     EMAIL_DELIVERY_MODE: str = "mock"  # mock | smtp

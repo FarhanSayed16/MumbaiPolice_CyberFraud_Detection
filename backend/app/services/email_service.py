@@ -21,46 +21,46 @@ async def send_email_async(
     html_body: Optional[str] = None,
 ) -> EmailResult:
     """
-    Send email via SMTP when configured, otherwise log mock dispatch.
-    Never claims live delivery without SMTP credentials.
+    Outbound mail. HARD-OFF unless ENABLE_EMAILS=true AND EMAIL_DELIVERY_MODE=smtp
+    and SMTP_* are set. Default config keeps ENABLE_EMAILS=false so SLA jobs never spam.
     """
-    if not getattr(settings, "ENABLE_EMAILS", False):
-        logger.info("Email paused by ENABLE_EMAILS=False. Skipping: %s", subject)
-        return {"success": True, "mode": "mock", "detail": "emails paused"}
+    # Absolute kill-switch (default False in Settings / .env)
+    if not settings.ENABLE_EMAILS:
+        logger.info("[EMAIL OFF] Skipped (ENABLE_EMAILS=false): to=%s subject=%s", to_email, subject)
+        return {"success": True, "mode": "disabled", "detail": "ENABLE_EMAILS=false — no outbound mail"}
 
-    mode = (settings.EMAIL_DELIVERY_MODE or "mock").lower()
+    mode = (settings.EMAIL_DELIVERY_MODE or "mock").lower().strip()
+    if mode != "smtp":
+        logger.info("[EMAIL MOCK] to=%s subject=%s", to_email, subject)
+        return {
+            "success": True,
+            "mode": "mock",
+            "detail": "logged only — set ENABLE_EMAILS=true and EMAIL_DELIVERY_MODE=smtp for live mail",
+        }
 
-    if mode == "smtp" and settings.SMTP_HOST and settings.SMTP_FROM:
-        try:
-            msg = EmailMessage()
-            msg["Subject"] = subject
-            msg["From"] = settings.SMTP_FROM
-            msg["To"] = to_email
-            msg.set_content(body)
-            if html_body:
-                msg.add_alternative(html_body, subtype="html")
+    if not (settings.SMTP_HOST and settings.SMTP_FROM):
+        logger.warning("[EMAIL] smtp mode but SMTP_HOST/FROM missing — not sending")
+        return {"success": False, "mode": "smtp", "detail": "SMTP_HOST or SMTP_FROM missing"}
 
-            password = (settings.SMTP_PASSWORD or "").replace(" ", "")
-            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
-                if settings.SMTP_USE_TLS:
-                    server.starttls()
-                if settings.SMTP_USER and password:
-                    server.login(settings.SMTP_USER, password)
-                server.send_message(msg)
+    try:
+        msg = EmailMessage()
+        msg["Subject"] = subject
+        msg["From"] = settings.SMTP_FROM
+        msg["To"] = to_email
+        msg.set_content(body)
+        if html_body:
+            msg.add_alternative(html_body, subtype="html")
 
-            logger.info("SMTP email sent to %s subject=%s", to_email, subject)
-            return {"success": True, "mode": "smtp", "detail": "delivered via SMTP"}
-        except Exception as exc:
-            logger.error("SMTP send failed for %s: %s", to_email, exc, exc_info=True)
-            return {"success": False, "mode": "smtp", "detail": f"SMTP error: {exc}"}
+        password = (settings.SMTP_PASSWORD or "").replace(" ", "")
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
+            if settings.SMTP_USE_TLS:
+                server.starttls()
+            if settings.SMTP_USER and password:
+                server.login(settings.SMTP_USER, password)
+            server.send_message(msg)
 
-    logger.info("--- [MOCK EMAIL DISPATCH] ---")
-    logger.info("To: %s", to_email)
-    logger.info("Subject: %s", subject)
-    logger.info("Body:\n%s", body)
-    logger.info("-----------------------------")
-    return {
-        "success": True,
-        "mode": "mock",
-        "detail": "logged only — set EMAIL_DELIVERY_MODE=smtp and SMTP_* to send live mail",
-    }
+        logger.info("SMTP email sent to %s subject=%s", to_email, subject)
+        return {"success": True, "mode": "smtp", "detail": "delivered via SMTP"}
+    except Exception as exc:
+        logger.error("SMTP send failed for %s: %s", to_email, exc, exc_info=True)
+        return {"success": False, "mode": "smtp", "detail": f"SMTP error: {exc}"}

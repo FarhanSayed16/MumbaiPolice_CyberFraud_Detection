@@ -115,9 +115,11 @@ async def scan_overdue_slas(ctx: dict[str, Any]) -> None:
                 message=f"Case {case.case_number} has breached its SLA. Please take immediate action."
             )
             db.add(new_notif)
-            
-            # Send Email
-            if settings.ENABLE_EMAILS:
+            # Flush before any optional email so a crash does not re-fire mail next minute
+            await db.flush()
+
+            # Optional email (OFF by default — ENABLE_EMAILS + ENABLE_SLA_EMAILS)
+            if settings.ENABLE_EMAILS and settings.ENABLE_SLA_EMAILS:
                 user_res = await db.execute(select(User).where(User.id == case.assigned_to_user_id))
                 assigned_user = user_res.scalars().first()
                 if assigned_user and assigned_user.email_notifications_enabled:
@@ -166,9 +168,9 @@ async def scan_overdue_slas(ctx: dict[str, Any]) -> None:
                     message=f"Notice {notice.notice_number} is overdue."
                 )
                 db.add(new_notif)
-                
-                # Send Email
-                if settings.ENABLE_EMAILS:
+                await db.flush()
+
+                if settings.ENABLE_EMAILS and settings.ENABLE_SLA_EMAILS:
                     user_res = await db.execute(select(User).where(User.id == notify_user_id))
                     assigned_user = user_res.scalars().first()
                     if assigned_user and assigned_user.email_notifications_enabled:
@@ -187,17 +189,20 @@ class WorkerSettings:
     ARQ Worker settings definition.
     Run via: arq app.workers.arq_worker.WorkerSettings
 
-    SLA scan schedule: hourly by default (SLA_SCAN_CRON_MINUTE=None).
-    Set SLA_SCAN_CRON_MINUTE=0..59 in local dev for per-minute scans.
+    SLA scan: once per hour at :00 by default. Email only if ENABLE_EMAILS and ENABLE_SLA_EMAILS.
     """
     functions = [sample_background_task, process_import_job, scan_overdue_slas]
-    cron_jobs = [
-        cron(
-            scan_overdue_slas,
-            minute=settings.SLA_SCAN_CRON_MINUTE,
-            run_at_startup=True,
-        )
-    ]
+    cron_jobs = (
+        [
+            cron(
+                scan_overdue_slas,
+                minute={settings.SLA_SCAN_CRON_MINUTE},
+                run_at_startup=settings.SLA_SCAN_RUN_AT_STARTUP,
+            )
+        ]
+        if settings.SLA_SCAN_ENABLED
+        else []
+    )
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = get_redis_settings()

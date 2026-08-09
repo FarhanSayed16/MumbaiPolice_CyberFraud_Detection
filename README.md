@@ -1,13 +1,47 @@
-# Mumbai Police / Maharashtra Cyber Money-Trail Investigation Platform
+# 🛡️ Mumbai Police / Maharashtra Cyber Money-Trail Investigation Platform
 
-> **A state-level investigation intelligence platform that turns multi-hop bank responses and complaint data into a living money-trail graph, cross-case mule intelligence, and SLA-tracked legal action — complementary to CFCFRMS, not a replacement for it.**
+> **A state-level investigation intelligence platform that turns multi-hop bank responses and complaint data into a living money-trail graph, cross-case mule intelligence, and SLA-tracked legal action.**
+
+---
+
+## 📖 About the Project & Its Importance
+
+In the rapidly evolving landscape of financial cybercrime, traditional spreadsheet-based investigation methods are no longer sufficient. When victims report financial fraud, the stolen funds are often instantly scattered across dozens of "mule" bank accounts in a complex web designed to evade detection. 
+
+This **Investigation Intelligence Platform** is purpose-built for the Maharashtra Cyber Police to solve this exact problem. It acts as a specialized, high-speed tactical tool complementary to existing national reporting systems (like CFCFRMS), focusing specifically on **rapid financial tracking, visual graph analysis, and statutory compliance**.
+
+### Why is this critical?
+* **Speed of Action:** Time is the most critical factor in freezing stolen funds. This platform automates the ingestion of bank transaction logs and instantly highlights where the money went.
+* **Mule Account Intelligence:** Fraudsters reuse bank accounts across multiple victims. This system automatically detects cross-case duplicates, allowing officers to link disparate crimes to the same organized syndicates.
+* **Statutory Compliance (SLA):** Officers and banks are bound by strict legal deadlines (SLAs) for issuing Section 91/94 notices and freezing accounts. This platform enforces these deadlines, alerting officers immediately when a case or bank response is overdue.
+
+---
+
+## ✨ Core Features
+
+* 🕸️ **Interactive Money-Trail Graph:** Powered by Neo4j, the system visually maps the flow of stolen funds across multiple hops and banks, allowing investigators to visually trace the money trail in real-time.
+* ⚡ **Bulk Transaction Ingestion Engine:** Automates the processing of massive bank response CSVs, automatically linking transactions to suspects and cases.
+* 🚨 **SLA Breach Monitoring:** Background queue workers constantly monitor statutory deadlines, automatically flagging overdue cases and overdue bank notices for immediate officer escalation.
+* 🤖 **Cross-Case Intelligence:** Instantly detects if a newly reported suspect account, phone number, or UPI ID has been involved in previous active cases.
+* 🌍 **Marathi Localization (i18n):** Full support for Marathi (`मराठी`), ensuring accessibility and ease of use for regional law enforcement officers across Maharashtra.
+* 🔒 **Role-Based Access Control (RBAC):** Secure, hierarchical access ensuring strict data privacy and audit logging for legal compliance.
+
+---
+
+## 🛠️ Technology Stack
+
+* **Frontend UI:** React 18, Vite, TypeScript, Tailwind CSS, shadcn/ui, Cytoscape.js (Graphing)
+* **Backend API:** Python 3.11+, FastAPI, SQLAlchemy (Async)
+* **Background Worker:** ARQ (Async Redis Queue)
+* **Relational Database:** PostgreSQL 16 (Users, Cases, Notices, Audit Logs)
+* **Graph Database:** Neo4j 5.20 (Money-trail mapping, multi-hop queries)
+* **Caching & Queues:** Redis 7
 
 ---
 
 ## 🏛️ Project Structure
-This monorepo contains the dual-service architecture (`frontend/` and `backend/`) along with local orchestration (`docker-compose.yml`) and comprehensive documentation (`docs/`).
 
-```
+```text
 d:\MumbaiPolice_CyberFraud_Detection\
 ├── .github/workflows/ci.yml       # CI/CD: Automated linting, testing, and build verification
 ├── backend/                       # Python FastAPI + ARQ + Redis + Postgres + Neo4j API
@@ -18,7 +52,7 @@ d:\MumbaiPolice_CyberFraud_Detection\
 ├── frontend/                      # Vite + React + TypeScript + Tailwind + shadcn/ui + Cytoscape.js
 │   ├── src/                       # Application components, routing shell, and typed API client
 │   └── Dockerfile                 # Frontend container definition
-├── docs/                          # Master plans, execution checklist, and Phase 1 discovery summary
+├── docs/                          # Master plans, execution checklist, and architecture docs
 └── docker-compose.yml             # Local-only stack (Postgres, Neo4j, Redis, API, ARQ worker, UI)
 ```
 
@@ -28,11 +62,7 @@ d:\MumbaiPolice_CyberFraud_Detection\
 
 The easiest way to spin up the entire stack locally with zero configuration is via `docker-compose`.
 
-### 1. Prerequisites
-- **Docker & Docker Compose** (Desktop or Engine v2+)
-- **Git**
-
-### 2. Environment Setup
+### 1. Environment Setup
 Create local copies of `.env` files from their templates:
 ```powershell
 # Copy backend env
@@ -42,17 +72,16 @@ Copy-Item backend\.env.example backend\.env
 Copy-Item frontend\.env.example frontend\.env
 ```
 
-### 3. Launch Stack
+### 2. Launch Stack
 Run the orchestration command from the repository root:
 ```powershell
 docker-compose up --build -d
 ```
 
-### 4. Verify Services
+### 3. Verify Services
 Once containers are running, access the services:
 - **Frontend Dashboard:** `http://localhost:5173`
 - **Backend API Docs (Swagger UI):** `http://localhost:8000/docs`
-- **Backend Health Check:** `http://localhost:8000/health` or `http://localhost:8000/api/v1/health`
 - **Neo4j Browser:** `http://localhost:7474` (Login: `neo4j` / `secretpassword`)
 
 ---
@@ -61,7 +90,12 @@ Once containers are running, access the services:
 
 If running outside Docker for faster hot-reloading:
 
-### Backend API (Python 3.11+)
+### 1. Databases (Docker)
+```powershell
+docker-compose up -d postgres neo4j redis
+```
+
+### 2. Backend API (Python 3.11+)
 ```powershell
 cd backend
 python -m venv venv
@@ -70,15 +104,15 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Background Worker (ARQ)
-The system uses an asynchronous queue for graph syncing and notifications. Run this in a separate terminal:
+### 3. Background Worker (ARQ)
+The system uses an asynchronous queue for graph syncing and SLA monitoring. Run this in a separate terminal:
 ```powershell
 cd backend
 .\venv\Scripts\activate
 arq app.workers.arq_worker.WorkerSettings
 ```
 
-### Frontend (Node.js 20+)
+### 4. Frontend (Node.js 20+)
 ```powershell
 cd frontend
 npm install
@@ -88,6 +122,7 @@ npm run dev
 ---
 
 ## 🧪 Testing & Verification
+
 To run automated tests across services:
 
 ### Backend Unit & Integration Tests
