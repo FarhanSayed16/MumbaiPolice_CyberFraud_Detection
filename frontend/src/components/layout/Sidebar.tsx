@@ -69,6 +69,10 @@ export const Sidebar: React.FC = () => {
       </div>
 
       <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+        <div className="flex items-center gap-2 mb-2">
+          <img src="/tracex-logo.png" alt="" className="h-7 w-7 rounded-md object-contain bg-white border border-slate-100 dark:border-slate-700" />
+          <p className="font-semibold text-slate-700 dark:text-slate-300 text-xs">Trace-X</p>
+        </div>
         <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1">
           <p className="font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-600">{t("nav.govSoftware", "Gov Proprietary Software")}</p>
           <p>{t("nav.maharashtraCyber", "Maharashtra Cyber / Mumbai Police")}</p>
