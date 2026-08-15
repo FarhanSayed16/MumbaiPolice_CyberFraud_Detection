@@ -1,5 +1,6 @@
-# Leave-Behind Kit — Money-Trail Investigation Prototype
+# Leave-Behind Kit — Trace-X (Money-Trail Investigation Prototype)
 
+**Product:** Trace-X  
 **For:** Mumbai Police / Maharashtra Cyber stakeholders  
 **Status:** Training prototype (synthetic data) — **not** a production / Band B claim  
 **Date:** 2026-07-30  
