@@ -1,5 +1,6 @@
 # DCP Demo Script — 8 Minutes (exact clicks + words)
 
+**Product:** Trace-X — Money-Trail Investigation Cockpit  
 **Audience:** DCP / senior Mumbai Police cyber leadership  
 **Presenter:** Speak. **Tech runner:** Click only — do not improvise.  
 **Login:** Supervisor — `supervisor.mumbai@maharashtracyber.gov.in` / `SecurePolice@2026`  
@@ -37,7 +38,7 @@
 
 > “Sir, after a cyber complaint is registered on 1930 or NCRP, investigating officers still spend significant time in Excel chasing bank hops and drafting notices.
 >
-> We built an **internal money-trail investigation cockpit** for Maharashtra Cyber / Mumbai Police. It does **not** replace NCRP. It helps officers **see the trail**, spot **reused mule accounts across cases**, store **evidence**, draft **BNSS notices**, and track **deadlines**.
+> We built **Trace-X** — an **internal money-trail investigation cockpit** for Maharashtra Cyber / Mumbai Police. It does **not** replace NCRP. It helps officers **see the trail**, spot **reused mule accounts across cases**, store **evidence**, draft **BNSS notices**, and track **deadlines**.
 >
 > What you will see is a **working prototype on synthetic data**. The investigation logic is real. We are **not** claiming live bank freeze or live CFCFRMS feed — the screen itself says that.
 >
