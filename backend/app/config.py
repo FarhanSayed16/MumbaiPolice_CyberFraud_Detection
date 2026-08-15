@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     Application configuration via environment variables.
     Supports .env loading and default fallbacks for local development.
     """
-    PROJECT_NAME: str = "Mumbai Police Cyber Fraud Detection Platform"
+    PROJECT_NAME: str = "Trace-X"
     ENVIRONMENT: str = "local"  # local | staging | demo | production
     DEBUG: bool = True
     API_V1_PREFIX: str = "/api/v1"
