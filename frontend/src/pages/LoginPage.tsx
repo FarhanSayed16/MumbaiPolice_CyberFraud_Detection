@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Shield, Lock, User, AlertCircle, CheckCircle2, Database, Key } from 'lucide-react';
+import { Lock, User, AlertCircle, CheckCircle2, Database, Key } from 'lucide-react';
 
 const envName = (import.meta.env.VITE_ENVIRONMENT || 'LOCAL').toUpperCase();
 /** Seed / quick-role panel — LOCAL only; hidden for DEMO/DCP builds */
@@ -61,14 +61,18 @@ export const LoginPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
       <div className="w-full max-w-lg space-y-6">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center p-3 rounded-full bg-blue-50 dark:bg-blue-900/40 border border-blue-200 text-blue-600 dark:text-blue-400 mb-2">
-            <Shield className="h-10 w-10" />
+          <div className="inline-flex items-center justify-center mb-2">
+            <img
+              src="/tracex-logo.png"
+              alt="Trace-X"
+              className="h-20 w-20 rounded-2xl object-contain shadow-md bg-white"
+            />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white dark:text-slate-100">
-            {t('login.title', 'Maharashtra Cyber Investigation Platform')}
+            {t('login.title', 'Trace-X')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
-            {t('login.subtitle', 'Mumbai Police Cyber Fraud Detection & Money-Trail Triage Engine')}
+            {t('login.subtitle', 'Money-Trail Investigation Cockpit — Mumbai Police / Maharashtra Cyber')}
           </p>
         </div>
 

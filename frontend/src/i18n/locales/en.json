@@ -87,8 +87,8 @@
     "packDownloadFailed": "Failed to download notice pack."
   },
   "login": {
-    "title": "Maharashtra Cyber Investigation Platform",
-    "subtitle": "Mumbai Police Cyber Fraud Detection & Money-Trail Triage Engine",
+    "title": "Trace-X",
+    "subtitle": "Money-Trail Investigation Cockpit — Mumbai Police / Maharashtra Cyber",
     "portalTitle": "Secure Law Enforcement Portal",
     "portalDescription": "Access is strictly restricted to authorized officers. All actions are audited.",
     "emailLabel": "Official Email",
@@ -257,7 +257,7 @@
     "statusHealthy": "SYSTEM STATUS: HEALTHY",
     "statusDegraded": "SYSTEM STATUS: DEGRADED",
     "statusDown": "SYSTEM STATUS: DOWN",
-    "platformName": "Mumbai Police Cyber Fraud Detection Platform",
+    "platformName": "Trace-X",
     "environment": "Environment:",
     "checked": "Checked:",
     "sentryNotConfig": "Sentry: NOT CONFIGURED",
