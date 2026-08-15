@@ -1,5 +1,5 @@
 import React from "react";
-import { Shield, User, LogOut, Globe, Settings, Moon, Sun } from "lucide-react";
+import { User, LogOut, Globe, Settings, Moon, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -26,12 +26,14 @@ export const Navbar: React.FC = () => {
   return (
     <header className="h-16 border-b bg-white dark:bg-slate-900 dark:border-slate-800 px-6 flex items-center justify-between sticky top-0 z-30 shadow-sm no-print transition-colors">
       <div className="flex items-center gap-3">
-        <div className="h-9 w-9 bg-primary/10 rounded-lg flex items-center justify-center text-primary font-bold">
-          <Shield className="h-5 w-5" />
-        </div>
+        <img
+          src="/tracex-logo.png"
+          alt="Trace-X"
+          className="h-10 w-10 rounded-lg object-contain bg-white shadow-sm border border-slate-100 dark:border-slate-700"
+        />
         <div>
           <h1 className="font-bold text-slate-800 dark:text-slate-200 dark:text-white text-base leading-tight transition-colors">
-            Maharashtra Cyber
+            Trace-X
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium transition-colors">
             Money-Trail Investigation Cockpit
