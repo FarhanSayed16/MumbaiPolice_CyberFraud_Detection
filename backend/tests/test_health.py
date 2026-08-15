@@ -26,7 +26,7 @@ async def test_api_v1_health_endpoint(async_client: AsyncClient):
     response = await async_client.get("/api/v1/health")
     assert response.status_code == 200
     data = response.json()
-    assert data["project_name"] == "Mumbai Police Cyber Fraud Detection Platform"
+    assert data["project_name"] == "Trace-X"
 
 
 @pytest.mark.asyncio
