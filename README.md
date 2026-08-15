@@ -1,4 +1,6 @@
-# 🛡️ Mumbai Police / Maharashtra Cyber Money-Trail Investigation Platform
+# Trace-X — Money-Trail Investigation Cockpit
+
+**For:** Mumbai Police / Maharashtra Cyber (internal investigation after 1930 / NCRP)
 
 > **A state-level investigation intelligence platform that turns multi-hop bank responses and complaint data into a living money-trail graph, cross-case mule intelligence, and SLA-tracked legal action.**
 
